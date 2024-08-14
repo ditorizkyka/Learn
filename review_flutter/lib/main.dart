@@ -1,115 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:hive_flutter/adapters.dart';
+import 'package:review_flutter/boxes.dart';
 
-void main() {
-  runApp(MyApp());
+import 'package:review_flutter/pages/home_screen/home_screen.dart';
+import 'package:review_flutter/pages/material_list_page/future_builder/future_builder_user.dart';
+import 'package:review_flutter/pages/material_list_page/hive_db/hive_db.dart';
+import 'package:review_flutter/pages/material_list_page/hive_db/todo_list.dart';
+import 'package:review_flutter/pages/material_list_page/http_get/http_get.dart';
+import 'package:review_flutter/pages/material_list_page/http_post/http_stateful.dart';
+import 'package:review_flutter/pages/material_list_page/http_putPatch/http_putPatch.dart';
+import 'package:review_flutter/pages/material_list_page/material_page.dart';
+import 'package:review_flutter/pages/material_list_page/user_list/user_list_page/user_list.dart';
+import 'package:review_flutter/pages/material_list_page/websocket_material/websocket_material.dart';
+
+void main() async {
+  await Hive.initFlutter();
+  Hive.registerAdapter(TodoListAdapter());
+  boxTodoList = await Hive.openBox('testBox');
+  runApp(const MainRouting());
 }
 
-class MyApp extends StatelessWidget {
+class MainRouting extends StatelessWidget {
+  const MainRouting({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: HomeScreen(),
+    return MaterialApp(
+      initialRoute: "/home_screen",
+      routes: {
+        "/home_screen": (context) => const HomeScreen(),
+        "/material_list_page": (context) => const MaterialListPage(),
+        "/user_list": (context) => const UserList(),
+        "/websocket_material": (context) => const WebsocketMaterial(),
+        "/http_post": (context) => const HttpStateful(),
+        "/http_get": (context) => const HttpGet(),
+        "/http_putPatch": (context) => const HttpPutpatch(),
+        "/future_builder_user": (context) => const FutureBuilderUser(),
+        "/hive_db": (context) => const HiveDb(),
+      },
     );
   }
 }
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  Future<Map<String, dynamic>?> getDataUser() async {
-    Uri url = Uri.parse("https://reqres.in/api/users/10");
-    var response = await http.get(url);
-    if (response.statusCode != 200) {
-      return null;
-    } else {
-      return (json.decode(response.body) as Map<String, dynamic>)['data'];
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.black,
-          title: const Text(
-            'Review Flutter',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
-          ),
-        ),
-        body: Container(
-          decoration: BoxDecoration(
-              color: Colors.black, borderRadius: BorderRadius.circular(30)),
-          margin: const EdgeInsets.fromLTRB(16, 30, 16, 0),
-          height: 170,
-          width: double.maxFinite,
-          child: FutureBuilder(
-            future: getDataUser(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              } else {
-                if (snapshot.hasData) {
-                  return Padding(
-                    padding: const EdgeInsets.all(25),
-                    child: Column(
-                      children: [
-                        Row(children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundImage:
-                                NetworkImage('${snapshot.data!['avatar']}'),
-                          ),
-                          SizedBox(
-                            width: 20,
-                          ),
-                          Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${snapshot.data!['first_name'] + ' ' + snapshot.data!['last_name']}',
-                                  style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  '${snapshot.data!['email']}',
-                                  style: TextStyle(color: Colors.white),
-                                )
-                              ])
-                        ])
-
-                        // Text(
-                        //   '${snapshot.data!['avatar']}',
-                        //   style: const TextStyle(color: Colors.white),
-                        // ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return const Center(
-                    child: Text("Data Not Found"),
-                  );
-                }
-              }
-            },
-          ),
-        ));
-  }
-}
-
-
-
-// Center(
-//         child: FutureBuilder(
-//           future: getDataUser(),
-//           builder: (context, snapshot) {
-//             return Text('${snapshot.data!['avatar']}');
-//           },
-//         ),
-//       ),
