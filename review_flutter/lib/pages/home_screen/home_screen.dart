@@ -59,9 +59,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class HomeScreenBody extends StatelessWidget {
+class HomeScreenBody extends StatefulWidget {
   const HomeScreenBody({super.key});
 
+  @override
+  State<HomeScreenBody> createState() => _HomeScreenBodyState();
+}
+
+class _HomeScreenBodyState extends State<HomeScreenBody> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -150,6 +155,7 @@ class UpcomingTask extends StatefulWidget {
 class _UpcomingTaskState extends State<UpcomingTask> {
   TextEditingController name = TextEditingController();
   TextEditingController date = TextEditingController();
+  var value = false;
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -234,8 +240,10 @@ class _UpcomingTaskState extends State<UpcomingTask> {
                           Color.fromARGB(255, 103, 16, 255)),
                     ),
                     onPressed: () {
-                      boxTodoList.put('key_${name.text}',
-                          TodoList(nameActivity: name.text, date: date.text));
+                      setState(() {
+                        boxTodoList.put('key_${name.text}',
+                            TodoList(nameActivity: name.text, date: date.text));
+                      });
                     },
                     child: const Text(
                       "Create Activity",
@@ -258,21 +266,49 @@ class _UpcomingTaskState extends State<UpcomingTask> {
                       margin: const EdgeInsets.symmetric(
                           vertical: 5, horizontal: 15),
                       child: ListTile(
-                        leading: const Checkbox(
-                          value: true,
-                          onChanged: null,
-                          checkColor: Colors.white,
-                          fillColor: WidgetStatePropertyAll(
-                              Color.fromARGB(255, 103, 16, 255)),
+                        leading: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              value = !value;
+                            });
+                          },
+                          child: Checkbox(
+                            activeColor: Colors.purple,
+                            value: value,
+                            onChanged: null,
+                            checkColor: Colors.white,
+                            fillColor: MaterialStateProperty.resolveWith<Color>(
+                                (Set<MaterialState> states) {
+                              // Return white if the checkbox is not checked (value is false)
+                              // Return purple if the checkbox is checked (value is true)
+                              if (value == false) {
+                                return Colors.white;
+                              }
+                              return const Color.fromARGB(255, 103, 16, 255);
+                            }),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5),
+                              side: const BorderSide(
+                                  color: Color.fromARGB(255, 103, 16, 255),
+                                  width: 3), // Customize the border
+                            ),
+                          ),
                         ),
-                        title: Text(todoList.nameActivity),
+                        title: Text(
+                          todoList.nameActivity,
+                          style: TextStyle(
+                              decoration:
+                                  value ? TextDecoration.lineThrough : null),
+                        ),
                         subtitle: Text(todoList.date),
                         trailing: IconButton(
                             style: const ButtonStyle(
                                 backgroundColor:
                                     WidgetStatePropertyAll(Colors.red)),
                             onPressed: () {
-                              boxTodoList.deleteAt(index);
+                              setState(() {
+                                boxTodoList.deleteAt(index);
+                              });
                             },
                             icon: const Icon(
                               Icons.delete_outline,
